@@ -4,14 +4,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.exception.EmployerNotFoundException;
 import com.example.demo.model.Employer;
+import com.example.demo.model.ErrorDetail;
 import com.example.demo.service.EmployerService;
 
 @RestController
@@ -29,6 +34,9 @@ public class EmployerController {
 	@GetMapping("/getbyid")
 	public Employer getById(@RequestParam("id") int id) {
 		Employer employer = service.getById(id);
+		if(employer == null) {
+			throw new EmployerNotFoundException();
+		}
 		return employer;
 	}
 
@@ -62,5 +70,12 @@ public class EmployerController {
 	@DeleteMapping("/delete")
 	public void deleteEmployer(@RequestParam("id") int id) {
 		service.deleteData(id);
+	}
+	
+	@ExceptionHandler(EmployerNotFoundException.class)
+	public ResponseEntity<ErrorDetail> handleException(Exception exception){
+		ErrorDetail errorDetail = new ErrorDetail("Record Not Found", HttpStatus.NOT_FOUND);
+		ResponseEntity<ErrorDetail> responseEntity = new ResponseEntity<>(errorDetail, HttpStatus.NOT_FOUND);
+		return responseEntity;
 	}
 }
